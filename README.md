@@ -10,6 +10,15 @@ This is an example of something like what I am trying to achieve;
 ![Example multitabs](http://i.imgur.com/8rxLA.png)
 
 
+![jedit tabbed editor](http://www.xhbml.com/grafikk/jedittasklistscreenshot.jpg)
+
+jEdit uses the buffer tabs plugin;
+
+http://sourceforge.net/projects/jedit-plugins/files/BufferTabs/1.2.2/BufferTabs-1.2.2.zip/download
+
+
+
+
 ## Status
 
 Nothing that is useful at the moment. The code in repo is just that which is being used for prototyping. If you download and try to run it, and your house falls down, don't blame me. I told you not to run it ;-)

@@ -1,10 +1,13 @@
-
 # GtkMultilineTabNotebook
 
 GtkMultilineTabNotebook is a gtk widget which is supposed to replace the standard GtkNotebook widget with one that supports multiple rows of Tabs for selecting the active sheet with tabs.
 
 The primary motivation is that I find it annoying to use any of the gtk based text editors such as gedit, geany, bluefish and their derivatives, because you either have to give up some content area real estate to have a file selector pane, or you have to scroll horizontally the tab display area.
 
+
+This is an example of something like what I am trying to achieve;
+
+![Example multitabs](http://i.imgur.com/8rxLA.png)
 
 
 ## Status

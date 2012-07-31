@@ -1,12 +1,12 @@
 
-v6-mar-11
+v6-mar-12
 
 Here's another version of gtkmultilinetab.c with (hopefully) free of bugs drawing procedure. Now
 the tabs look more closely to what you would expect them to look. I've tested this version with a couple of themes and it seems to work fine.
 
 gtkmultilinetab.c
 
-v5-Mar-11
+v5-Mar-12
 
 	I've fixed all found bugs so far. Geany seems to work OK.
 The source files of GtkMultilineTab widget were updated to enable cooperation with a particular application (Geany in this case).
@@ -36,7 +36,7 @@ I have supplied patches (instead of simply new versions of the files) just to ma
 
 
 
-v4-Mar-11
+v4-Mar-12
 
 Here's the complex extended widget source code and a simple program which I've used for testing. You can now add the widget to a container just like any other.
 
@@ -50,7 +50,7 @@ gtkmultilinetabnotebook.h
 gtkmultilinetabnotebook.c
 notebook_test.c
 
-v3-Feb-11
+v3-Feb-12
 
 	
 I'm sorry, there is a solution to the problem with the child widget accommodating its size in a container (I've searched some useful Internet resources like Stackoverflow...). The remedy is quite simple (but not obvious to me): connect to the "size-allocate" signal after the default handler and just request a new size for the child widget (after its parent was resized).
@@ -58,7 +58,7 @@ The source code is attached.
 update to gtkmultilinetab.c
 
 
-v2-feb-11
+v2-feb-12
 
 Here is the implementation of my very first idea (simple yet functional):
 1. First create a widget (derived from just GtkWidget) which takes a notebook object in the "constructor" and display the associated label in a way you require. There is a limitation however: the label can be only GtkLabel (and created manually, not by passing NULL to gtk_notebook_add_page() )
@@ -82,7 +82,7 @@ notebook2.c
 
 
 
-v1-Feb-11
+v1-Feb-12
 
 The final idea was:
 1. Create a container widget (derived from GtkContainer) that would be able to position the tab labels properly inside the container.

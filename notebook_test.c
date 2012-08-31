@@ -1,5 +1,6 @@
-#include <gtk/gtk.h>
 
+#include <gtk/gtk.h>
+#include <gtk/gtknotebook.h>
 #include "gtkmultilinetabnotebook.h"
 
 
@@ -11,6 +12,7 @@ static gboolean delete_event (GtkWidget *widget, GdkEvent *event, gpointer data)
 
 int main (int argc, char *argv[])
 {
+
     GtkWidget *window;
     GtkWidget *notebook;
     GtkWidget *multiline_tab_notebook;
@@ -39,11 +41,13 @@ int main (int argc, char *argv[])
 
     /* append a bunch of pages to the notebook */
 
-    for (i = 0; i < 45; i++)
+    for (i = 0; i < 15; i++)
     {
         sprintf(bufferf, "Append Frame %d", i + 1);
-        sprintf(bufferl, "Test #%d", i + 1);
+        sprintf(bufferl, "  Tab no%d  ", i + 1);
         
+        printf("Child: %s\n\r", bufferl);
+       // gtk_notebook_set_show_tabs(GTK_NOTEBOOK (notebook), TRUE);
         frame = gtk_frame_new (bufferf);
         gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
         gtk_widget_set_usize (frame, 100, 75);

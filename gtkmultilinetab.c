@@ -2,15 +2,15 @@
 
 #include "gtkmultilinetab.h"
 
-#define HORIZONTAL_GAP  2
-#define VERTICAL_GAP    4
+#define HORIZONTAL_GAP  0
+#define VERTICAL_GAP    0
 
 #define MULTILINE_TAB_DEFAULT_SIZE  100
 
 static void     gtk_multiline_tab_class_init        (GtkMultilineTabClass *);
 static void     gtk_multiline_tab_init              (GtkMultilineTab *);
 static void     gtk_multiline_tab_destroy           (GtkObject *);
-
+static GObject *g_object_clone(GObject *src);
 /*** GtkWidget class methods ***/
 static void     gtk_multiline_tab_realize           (GtkWidget *);
 static void     gtk_multiline_tab_size_request      (GtkWidget *, GtkRequisition *);
@@ -78,7 +78,7 @@ gtk_multiline_tab_class_init (GtkMultilineTabClass *the_class)
 
     widget_class->realize = gtk_multiline_tab_realize;    
     widget_class->expose_event = gtk_multiline_tab_expose;
-//  widget_class->size_request = gtk_multiline_tab_size_request;
+    widget_class->size_request = gtk_multiline_tab_size_request;
     widget_class->size_allocate = gtk_multiline_tab_size_allocate;
     widget_class->button_press_event = gtk_multiline_tab_button_press;
     widget_class->button_release_event = gtk_multiline_tab_button_release;
@@ -193,6 +193,8 @@ gtk_multiline_tab_realize (GtkWidget *widget)
 static  GtkWidget*  
 gtk_multiline_tab_create_label (GtkWidget *label)
 {
+
+    GtkWidget* lblCloned = (GtkWidget*)g_object_clone((GObject*)label);
     GList *children;
     GtkWidget *ebox;
     GtkWidget *hbox;
@@ -200,7 +202,8 @@ gtk_multiline_tab_create_label (GtkWidget *label)
     GtkWidget *btn;
     GtkWidget *image;
     GtkWidget *tab_label;
-    GtkWidget *close_button;
+   // GtkWidget *close_button;
+
 
     if (GTK_IS_EVENT_BOX (label))
     {
@@ -228,19 +231,20 @@ gtk_multiline_tab_create_label (GtkWidget *label)
     gtk_widget_set_has_window (ebox, FALSE);
 
     hbox = gtk_hbox_new (FALSE, 2);
-    gtk_box_pack_start (GTK_BOX (hbox), tab_label, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (hbox), lblCloned, FALSE, FALSE, 0);
     gtk_container_add (GTK_CONTAINER (ebox), hbox);
 
-    close_button = gtk_button_new ();
+    /*close_button = gtk_button_new ();
     gtk_button_set_relief (GTK_BUTTON (close_button), GTK_RELIEF_NONE);
     gtk_button_set_focus_on_click (GTK_BUTTON (close_button), FALSE);
-    gtk_widget_set_name (close_button, "geany-close-tab-button");
+    gtk_widget_set_name (close_button, "geany-close-tab-button");*/
 
-    image = gtk_image_new_from_stock (GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
-    gtk_container_add (GTK_CONTAINER (close_button), image);
+    /*image = gtk_image_new_from_stock (GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+    gtk_container_add (GTK_CONTAINER (close_button), image);*/
 
-    align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
-    gtk_container_add (GTK_CONTAINER (align), close_button);
+    //align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
+    //gtk_container_add(GTK_CONTAINER(hbox), label);
+//    gtk_container_add (GTK_CONTAINER (align), close_button);
     gtk_box_pack_start (GTK_BOX (hbox), align, TRUE, TRUE, 0);
 
     /* establish the signal handlers chain */
@@ -248,10 +252,10 @@ gtk_multiline_tab_create_label (GtkWidget *label)
         GTK_SIGNAL_FUNC (tab_press), (gpointer) label);
     g_signal_connect (GTK_OBJECT (ebox), "button-release-event",
         GTK_SIGNAL_FUNC (tab_release), (gpointer) label);
-    g_signal_connect (GTK_OBJECT (close_button), "button-press-event",
-        GTK_SIGNAL_FUNC (close_press), (gpointer) btn);
-    g_signal_connect (GTK_OBJECT (close_button), "clicked",
-        GTK_SIGNAL_FUNC (close_clicked), (gpointer) btn);
+    /*g_signal_connect (GTK_OBJECT (close_button), "button-press-event",
+        GTK_SIGNAL_FUNC (close_press), (gpointer) btn);*/
+    /*g_signal_connect (GTK_OBJECT (close_button), "clicked",
+        GTK_SIGNAL_FUNC (close_clicked), (gpointer) btn);*/
 
     /* make the complex label widget visible */
     gtk_widget_show_all (ebox);
@@ -502,14 +506,17 @@ gtk_multiline_tab_expose (GtkWidget *widget, GdkEventExpose *event)
         gtk_widget_get_allocation (label, &allocation);
 
         state_type = (i == current_page ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE);
+        gint verticalActiveGap = (i == current_page ? 0 : 3);
 
         gtk_paint_extension (GTK_WIDGET (multiline_tab->notebook)->style, 
             widget->window, state_type, GTK_SHADOW_OUT,
-            &event->area, widget, "tab",
+            &event->area, (GtkWidget*)multiline_tab->notebook, "tab",
             allocation.x - HORIZONTAL_GAP / 2, allocation.y - VERTICAL_GAP,
-            allocation.width + HORIZONTAL_GAP, allocation.height + VERTICAL_GAP,
-            GTK_POS_BOTTOM);
+            allocation.width + HORIZONTAL_GAP, allocation.height + VERTICAL_GAP + verticalActiveGap+ 50,
+                             gtk_notebook_get_tab_pos(multiline_tab->notebook));
+
     }
+    printf("Childs count: %d\n\r", i);
 
     /* call GtkBox method implementation */
     (* GTK_WIDGET_CLASS (parent_class)->expose_event) (widget, event);
@@ -533,4 +540,32 @@ static gboolean
 gtk_multiline_tab_motion_notify (GtkWidget *widget, GdkEventMotion *event)
 {
     return FALSE;
+}
+
+GObject *
+g_object_clone(GObject *src)
+{
+    GObject *dst;
+    GParameter *params;
+    GParamSpec **specs;
+    guint n, n_specs, n_params;
+
+    specs = g_object_class_list_properties(G_OBJECT_GET_CLASS(src), &n_specs);
+    params = g_new0(GParameter, n_specs);
+    n_params = 0;
+
+    for (n = 0; n < n_specs; ++n)
+        if (strcmp(specs[n]->name, "parent") &&
+            (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
+            params[n_params].name = g_intern_string(specs[n]->name);
+            g_value_init(&params[n_params].value, specs[n]->value_type);
+            g_object_get_property(src, specs[n]->name, &params[n_params].value);
+            ++ n_params;
+        }
+
+    dst = g_object_newv(G_TYPE_FROM_INSTANCE(src), n_params, params);
+    g_free(specs);
+    g_free(params);
+
+    return dst;
 }

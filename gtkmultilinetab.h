@@ -39,8 +39,8 @@ struct _GtkMultilineTabClass
 };
 
 
-GtkWidget*  gtk_multiline_tab_new       (GtkNotebook *notebook);
-GtkType     gtk_multiline_tab_get_type  (void);
+static GtkWidget*  gtk_multiline_tab_new       (GtkNotebook *notebook);
+static GtkType     gtk_multiline_tab_get_type  (void);
 
 
 #ifdef __cplusplus

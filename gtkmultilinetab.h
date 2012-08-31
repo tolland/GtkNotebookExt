@@ -3,7 +3,7 @@
 
 
 #include <gtk/gtknotebook.h>
-
+#include <gtk/gtkbbox.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +21,7 @@ typedef struct _GtkMultilineTabClass    GtkMultilineTabClass;
 
 struct _GtMultilineTab
 {
-    GtkWidget widget;
+    GtkBox widget;
 
     /* the associated GtkNotebook widget */  
     GtkNotebook *notebook;
@@ -35,7 +35,7 @@ struct _GtMultilineTab
 
 struct _GtkMultilineTabClass
 {
-    GtkWidgetClass parent_class;
+    GtkBoxClass parent_class;//he he he
 };
 
 

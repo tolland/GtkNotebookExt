@@ -1,11 +1,16 @@
 #include <gtk/gtk.h>
 
 #include "gtkmultilinetab.h"
-
+#include <memory.h>
 #define HORIZONTAL_GAP  0
 #define VERTICAL_GAP    0
 
 #define MULTILINE_TAB_DEFAULT_SIZE  100
+typedef struct _TabMetrics
+{
+    GtkAllocation drawRect;
+    GtkAllocation labelRect;
+} TabMetrics;
 
 static void     gtk_multiline_tab_class_init        (GtkMultilineTabClass *);
 static void     gtk_multiline_tab_init              (GtkMultilineTab *);
@@ -36,7 +41,7 @@ static  void        close_clicked   (GtkButton *, gpointer);                    
 static  GtkWidget*  gtk_multiline_tab_create_label (GtkWidget *);
 
 static GtkVBoxClass *parent_class = NULL;
-static void gtk_multiline_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* rectangle);
+static void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* layoutRect, TabMetrics * tabMetrics);
 GType
 gtk_multiline_tab_get_type (void)
 {
@@ -352,13 +357,14 @@ gtk_multiline_tab_size_request (GtkWidget *widget, GtkRequisition *requisition)
     GtkMultilineTab *multiline_tab;
     GList *children;
     guint max_height;
-    guint tab_height;
+    guint tab_height= 0;
     gboolean first_line;
     GtkWidget *label;
     GtkAllocation allocation;
     GtkRequisition label_requisition;
-    gint x, y;
-
+    gint x = 0, y = 0;
+    memset(&allocation,0, sizeof(allocation));
+    memset(&label_requisition,0, sizeof(label_requisition));
     g_return_if_fail (widget != NULL);
     g_return_if_fail (GTK_IS_MULTILINE_TAB (widget));
 
@@ -506,7 +512,7 @@ gtk_multiline_tab_expose (GtkWidget *widget, GdkEventExpose *event)
         gtk_widget_get_allocation (label, &allocation);
 
         state_type = (i == current_page ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE);
-        gint verticalActiveGap = (i == current_page ? 0 : 3);
+        gint verticalActiveGap = (i == current_page ? 0 : widget->style->ythickness);
 
         gtk_paint_extension (GTK_WIDGET (multiline_tab->notebook)->style, 
             widget->window, state_type, GTK_SHADOW_OUT,
@@ -516,7 +522,7 @@ gtk_multiline_tab_expose (GtkWidget *widget, GdkEventExpose *event)
                              gtk_notebook_get_tab_pos(multiline_tab->notebook));
 
     }
-    printf("Childs count: %d\n\r", i);
+
 
     /* call GtkBox method implementation */
     (* GTK_WIDGET_CLASS (parent_class)->expose_event) (widget, event);
@@ -570,12 +576,22 @@ g_object_clone(GObject *src)
     return dst;
 }
 
-void gtk_multiline_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* rectangle)
+void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab,
+                                    gint pos,
+                                    GtkAllocation* layoutRect,
+                                    TabMetrics * tabMetrics)
 {
+    //TODO: rework size calculation
+    /* According with
+          page->requisition.width =
+            child_requisition.width +
+            2 * widget->style->xthickness;
+*/
+    /*
     GtkMultilineTab *multiline_tab;
     GtkWidget* page;
     GtkWidget* label;
-
+    memset(tabMetrics, 0, sizeof(*tabMetrics));
     multiline_tab = GTK_MULTILINE_TAB (tab);
     page= gtk_notebook_get_nth_page(multiline_tab->notebook, pos);
     label= gtk_notebook_get_tab_label(multiline_tab->notebook, page);
@@ -584,4 +600,6 @@ void gtk_multiline_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* r
     rectangle->y = label->allocation.y;
     rectangle->width = label->allocation.width;
     rectangle->height = page->allocation.y;
+    */
 }
+

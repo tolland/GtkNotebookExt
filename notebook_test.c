@@ -47,7 +47,7 @@ int main (int argc, char *argv[])
         sprintf(bufferl, "  Tab no%d  ", i + 1);
         
         printf("Child: %s\n\r", bufferl);
-       // gtk_notebook_set_show_tabs(GTK_NOTEBOOK (notebook), TRUE);
+        gtk_notebook_set_show_tabs(GTK_NOTEBOOK (notebook), TRUE);
         frame = gtk_frame_new (bufferf);
         gtk_container_set_border_width (GTK_CONTAINER (frame), 10);
         gtk_widget_set_usize (frame, 100, 75);

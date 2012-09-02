@@ -36,7 +36,7 @@ static  void        close_clicked   (GtkButton *, gpointer);                    
 static  GtkWidget*  gtk_multiline_tab_create_label (GtkWidget *);
 
 static GtkVBoxClass *parent_class = NULL;
-
+static void gtk_multiline_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* rectangle);
 GType
 gtk_multiline_tab_get_type (void)
 {
@@ -245,7 +245,7 @@ gtk_multiline_tab_create_label (GtkWidget *label)
     //align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
     //gtk_container_add(GTK_CONTAINER(hbox), label);
 //    gtk_container_add (GTK_CONTAINER (align), close_button);
-    gtk_box_pack_start (GTK_BOX (hbox), align, TRUE, TRUE, 0);
+  //  gtk_box_pack_start (GTK_BOX (hbox), align, TRUE, TRUE, 0);
 
     /* establish the signal handlers chain */
     g_signal_connect (GTK_OBJECT (ebox), "button-press-event",
@@ -568,4 +568,20 @@ g_object_clone(GObject *src)
     g_free(params);
 
     return dst;
+}
+
+void gtk_multiline_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* rectangle)
+{
+    GtkMultilineTab *multiline_tab;
+    GtkWidget* page;
+    GtkWidget* label;
+
+    multiline_tab = GTK_MULTILINE_TAB (tab);
+    page= gtk_notebook_get_nth_page(multiline_tab->notebook, pos);
+    label= gtk_notebook_get_tab_label(multiline_tab->notebook, page);
+    gtk_widget_get_allocation(label, rectangle);
+    rectangle->x = label->allocation.x;
+    rectangle->y = label->allocation.y;
+    rectangle->width = label->allocation.width;
+    rectangle->height = page->allocation.y;
 }

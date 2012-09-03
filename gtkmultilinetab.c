@@ -9,6 +9,7 @@
 typedef struct _TabMetrics
 {
     GtkAllocation drawRect;
+    GtkRequisition labelRequisition;
     GtkAllocation labelRect;
 } TabMetrics;
 
@@ -362,7 +363,9 @@ gtk_multiline_tab_size_request (GtkWidget *widget, GtkRequisition *requisition)
     GtkWidget *label;
     GtkAllocation allocation;
     GtkRequisition label_requisition;
+    TabMetrics metrics;
     gint x = 0, y = 0;
+    memset(&metrics,0, sizeof(metrics));
     memset(&allocation,0, sizeof(allocation));
     memset(&label_requisition,0, sizeof(label_requisition));
     g_return_if_fail (widget != NULL);
@@ -378,35 +381,18 @@ gtk_multiline_tab_size_request (GtkWidget *widget, GtkRequisition *requisition)
     max_height = 0;
     first_line = TRUE;
 
+    gint i = 0;
     for (children = gtk_container_get_children (GTK_CONTAINER (multiline_tab)); children; children = children->next)
     {
-        label = GTK_WIDGET (children->data);
 
-        label_requisition.width  = 0;
-        label_requisition.height = 0;
-
-        if (gtk_widget_get_mapped (label))
-            gtk_widget_size_request (label, &label_requisition);
-
-        max_height = MAX (max_height, label_requisition.height);
-
-        if (x + label_requisition.width + HORIZONTAL_GAP >= allocation.width && !first_line)
-        {
-            x = HORIZONTAL_GAP;
-            y += max_height + VERTICAL_GAP;
-            max_height = 0;
-        }
-        
-        first_line = FALSE;
-
-        x += label_requisition.width + HORIZONTAL_GAP;
+        gtk_multiline_tab_get_tab_size(multiline_tab, i, &allocation, &metrics);
+        i++;
     }
 
-    /* no VERTICAL_GAP at the bottom */
-    tab_height = y + (max_height ? max_height : label_requisition.height);
+
 
     requisition->width  = -1; /* "natural" size */
-    requisition->height = tab_height;
+    requisition->height = metrics.drawRect.y + metrics.drawRect.height;
 }
 
 static void
@@ -441,32 +427,18 @@ gtk_multiline_tab_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
 
         max_height = 0;
         first_line = TRUE;
-
+        int i = 0;
         /* arrange the labels (child widgets) */
         for (children = gtk_container_get_children (GTK_CONTAINER (multiline_tab)); children; children = children->next)
         {
+            TabMetrics metrics;
             label = GTK_WIDGET (children->data);
-            gtk_widget_size_request (label, &requisition);
+            gtk_multiline_tab_get_tab_size(multiline_tab, i, allocation, &metrics);
 
-            max_height = MAX (max_height, requisition.height);
-
-            if (x + requisition.width + HORIZONTAL_GAP >= allocation->width && !first_line)
-            {
-                x = HORIZONTAL_GAP;
-                y += max_height + VERTICAL_GAP;
-                max_height = 0;
-            }
-
-            first_line = FALSE;
-
-            child_allocation.x = x;
-            child_allocation.y = y;
-            child_allocation.width  = requisition.width;
-            child_allocation.height = requisition.height;
-
-            gtk_widget_size_allocate (label, &child_allocation);
+            gtk_widget_size_allocate (label, &metrics.labelRect);
 
             x += requisition.width + HORIZONTAL_GAP;
+            i++;
         }
     }
 }
@@ -508,17 +480,17 @@ gtk_multiline_tab_expose (GtkWidget *widget, GdkEventExpose *event)
 
     for (i = 0; children; children = children->next, i++)
     {
+        TabMetrics metrics;
         label = GTK_WIDGET (children->data);
-        gtk_widget_get_allocation (label, &allocation);
+        gtk_multiline_tab_get_tab_size(multiline_tab, i, &widget->allocation, &metrics);
 
         state_type = (i == current_page ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE);
-        gint verticalActiveGap = (i == current_page ? 0 : widget->style->ythickness);
 
         gtk_paint_extension (GTK_WIDGET (multiline_tab->notebook)->style, 
             widget->window, state_type, GTK_SHADOW_OUT,
             &event->area, (GtkWidget*)multiline_tab->notebook, "tab",
-            allocation.x - HORIZONTAL_GAP / 2, allocation.y - VERTICAL_GAP,
-            allocation.width + HORIZONTAL_GAP, allocation.height + VERTICAL_GAP + verticalActiveGap+ 50,
+            metrics.drawRect.x, metrics.drawRect.y ,
+            metrics.drawRect.width , metrics.drawRect.height ,
                              gtk_notebook_get_tab_pos(multiline_tab->notebook));
 
     }
@@ -581,25 +553,53 @@ void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab,
                                     GtkAllocation* layoutRect,
                                     TabMetrics * tabMetrics)
 {
-    //TODO: rework size calculation
-    /* According with
-          page->requisition.width =
-            child_requisition.width +
-            2 * widget->style->xthickness;
-*/
-    /*
-    GtkMultilineTab *multiline_tab;
-    GtkWidget* page;
+    GList* children;
+    GtkWidget* widget;
     GtkWidget* label;
-    memset(tabMetrics, 0, sizeof(*tabMetrics));
-    multiline_tab = GTK_MULTILINE_TAB (tab);
-    page= gtk_notebook_get_nth_page(multiline_tab->notebook, pos);
-    label= gtk_notebook_get_tab_label(multiline_tab->notebook, page);
-    gtk_widget_get_allocation(label, rectangle);
-    rectangle->x = label->allocation.x;
-    rectangle->y = label->allocation.y;
-    rectangle->width = label->allocation.width;
-    rectangle->height = page->allocation.y;
-    */
+    widget = GTK_WIDGET(tab);
+    gint i = 0;
+    gint xMargin = widget->style->xthickness;
+    gint yMargin = widget->style->ythickness;
+    gint widthMargin = 2 * xMargin;
+    gint heightMargin = 2 * yMargin;
+    gint currentPage = 0;
+    gint max_height = 0;
+    gint x = 0;
+    gint y = 0;
+    gboolean first_line = TRUE;
+    currentPage = gtk_notebook_get_current_page(tab->notebook);
+    /* arrange the labels (child widgets) */
+    for (children = gtk_container_get_children (GTK_CONTAINER (tab)); children && i <= pos; children = children->next)
+    {
+        gint currentLabelOffset = currentPage == i ? 0 : yMargin;
+        label = GTK_WIDGET (children->data);
+        gtk_widget_size_request (label, &tabMetrics->labelRequisition);
+
+        max_height = MAX (max_height, tabMetrics->labelRequisition.height + heightMargin);
+
+        if (x + tabMetrics->labelRequisition.width + widthMargin
+                >= layoutRect->width && !first_line)
+        {
+            x = HORIZONTAL_GAP;
+            y += max_height;
+            max_height = 0;
+        }
+
+        first_line = FALSE;
+
+        tabMetrics->labelRect.x = x + xMargin;
+        tabMetrics->labelRect.y = y + yMargin;
+        tabMetrics->labelRect.width  = tabMetrics->labelRequisition.width;
+        tabMetrics->labelRect.height = tabMetrics->labelRequisition.height;
+
+        tabMetrics->drawRect.x = x;
+        tabMetrics->drawRect.y = y + currentLabelOffset;
+        tabMetrics->drawRect.width = tabMetrics->labelRequisition.width + widthMargin;
+        tabMetrics->drawRect.height = tabMetrics->labelRequisition.height + heightMargin ;
+
+        x += tabMetrics->labelRect.width + widthMargin;
+        i++;
+    }
+
 }
 

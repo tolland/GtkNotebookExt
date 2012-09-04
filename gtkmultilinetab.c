@@ -511,7 +511,7 @@ gtk_multiline_tab_expose (GtkWidget *widget, GdkEventExpose *event)
             &event->area, (GtkWidget*)multiline_tab->notebook, "tab",
             metrics.drawRect.x, metrics.drawRect.y ,
             metrics.drawRect.width , metrics.drawRect.height ,
-                             gtk_notebook_get_tab_pos(multiline_tab->notebook));
+                             GTK_POS_TOP);
 
     }
 

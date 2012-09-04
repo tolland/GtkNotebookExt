@@ -11,7 +11,6 @@ pkg_check_modules (GEANY REQUIRED geany)
 include_directories(${GTK2_INCLUDE_DIRS} ${GEANY_INCLUDE_DIRS})
 # add defines provided by pkg-config
 add_definitions(${GEANY_CFLAGS})
-set(CMAKE_C_FLAGS  ${CMAKE_C_FLAGS} ${GEANY_CFLAGS})
 link_directories (${GTK2_LIBRARY_DIRS})
 add_definitions (${GTK2_CFLAGS_OTHER})
 set(CMAKE_MODULE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${GTK2_LDFLAGS})

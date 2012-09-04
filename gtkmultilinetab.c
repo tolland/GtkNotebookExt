@@ -200,7 +200,6 @@ static  GtkWidget*
 gtk_multiline_tab_create_label (GtkWidget *label)
 {
 
-    GtkWidget* lblCloned = (GtkWidget*)g_object_clone((GObject*)label);
     GList *children;
     GtkWidget *ebox;
     GtkWidget *hbox;
@@ -208,7 +207,7 @@ gtk_multiline_tab_create_label (GtkWidget *label)
     GtkWidget *btn;
     GtkWidget *image;
     GtkWidget *tab_label;
-   // GtkWidget *close_button;
+    GtkWidget *close_button;
 
 
     if (GTK_IS_EVENT_BOX (label))
@@ -237,31 +236,31 @@ gtk_multiline_tab_create_label (GtkWidget *label)
     gtk_widget_set_has_window (ebox, FALSE);
 
     hbox = gtk_hbox_new (FALSE, 2);
-    gtk_box_pack_start (GTK_BOX (hbox), lblCloned, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (hbox), tab_label, FALSE, FALSE, 0);
     gtk_container_add (GTK_CONTAINER (ebox), hbox);
 
-    /*close_button = gtk_button_new ();
+    close_button = gtk_button_new ();
     gtk_button_set_relief (GTK_BUTTON (close_button), GTK_RELIEF_NONE);
     gtk_button_set_focus_on_click (GTK_BUTTON (close_button), FALSE);
-    gtk_widget_set_name (close_button, "geany-close-tab-button");*/
+    gtk_widget_set_name (close_button, "geany-close-tab-button");
 
-    /*image = gtk_image_new_from_stock (GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
-    gtk_container_add (GTK_CONTAINER (close_button), image);*/
+    image = gtk_image_new_from_stock (GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+    gtk_container_add (GTK_CONTAINER (close_button), image);
 
-    //align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
-    //gtk_container_add(GTK_CONTAINER(hbox), label);
-//    gtk_container_add (GTK_CONTAINER (align), close_button);
-  //  gtk_box_pack_start (GTK_BOX (hbox), align, TRUE, TRUE, 0);
+    align = gtk_alignment_new (1.0, 0.5, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(hbox), label);
+    gtk_container_add (GTK_CONTAINER (align), close_button);
+    gtk_box_pack_start (GTK_BOX (hbox), align, TRUE, TRUE, 0);
 
     /* establish the signal handlers chain */
     g_signal_connect (GTK_OBJECT (ebox), "button-press-event",
         GTK_SIGNAL_FUNC (tab_press), (gpointer) label);
     g_signal_connect (GTK_OBJECT (ebox), "button-release-event",
         GTK_SIGNAL_FUNC (tab_release), (gpointer) label);
-    /*g_signal_connect (GTK_OBJECT (close_button), "button-press-event",
-        GTK_SIGNAL_FUNC (close_press), (gpointer) btn);*/
-    /*g_signal_connect (GTK_OBJECT (close_button), "clicked",
-        GTK_SIGNAL_FUNC (close_clicked), (gpointer) btn);*/
+    g_signal_connect (GTK_OBJECT (close_button), "button-press-event",
+        GTK_SIGNAL_FUNC (close_press), (gpointer) btn);
+    g_signal_connect (GTK_OBJECT (close_button), "clicked",
+        GTK_SIGNAL_FUNC (close_clicked), (gpointer) btn);
 
     /* make the complex label widget visible */
     gtk_widget_show_all (ebox);
@@ -558,7 +557,7 @@ void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab,
     GtkWidget* label;
     widget = GTK_WIDGET(tab);
     gint i = 0;
-    gint xMargin = widget->style->xthickness;
+    gint xMargin = 2* widget->style->xthickness;
     gint yMargin = widget->style->ythickness;
     gint widthMargin = 2 * xMargin;
     gint heightMargin = 2 * yMargin;

@@ -60,7 +60,7 @@ gtk_multiline_tab_notebook_new (GtkNotebook *notebook)
     gtk_notebook_set_scrollable (notebook, TRUE);
 
     gtk_box_pack_start (GTK_BOX (multiline_tab_notebook), GTK_WIDGET (multiline_tab), FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (multiline_tab_notebook), GTK_WIDGET (notebook), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (multiline_tab_notebook), GTK_WIDGET (notebook), TRUE, TRUE, 0);
 
     return GTK_WIDGET (multiline_tab_notebook);
 }

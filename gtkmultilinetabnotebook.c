@@ -29,6 +29,10 @@ gtk_multiline_tab_notebook_get_type (void)
         };
 
         multiline_tab_notebook_type = g_type_register_static (GTK_TYPE_VBOX, "GtkMultilineTabNotebook", &multiline_tab_notebook_info, 0);
+        if(!multiline_tab_notebook_type)
+        {
+            multiline_tab_notebook_type = g_type_from_name("GtkMultilineTabNotebook");
+        }
     }
 
   return multiline_tab_notebook_type;

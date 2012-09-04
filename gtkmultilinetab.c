@@ -1,5 +1,8 @@
 #include <gtk/gtk.h>
-
+/**
+ *gtk_widget_modify_fg(doc->priv->tab_label, GTK_STATE_NORMAL, color);
+    gtk_widget_modify_fg(doc->priv->tab_label, GTK_STATE_ACTIVE, color);
+*/
 #include "gtkmultilinetab.h"
 #include <memory.h>
 #define HORIZONTAL_GAP  0
@@ -36,6 +39,7 @@ static void     gtk_multiline_tab_realloc_size      (GtkWidget *, GdkRectangle *
 static  gboolean    tab_press       (GtkWidget *, GdkEventButton *, gpointer);  /* "button-press-event" signal handler for the entire tab label widget*/
 static  gboolean    tab_release     (GtkWidget *, GdkEventButton *, gpointer);  /* "button-release-event" signal handler for the entire tab label widget*/
 static  gboolean    close_press     (GtkWidget *, GdkEventButton *, gpointer);  /* "button-press-event" signal handler for the label's close button widget*/
+static  gboolean    label_markup_changed (GtkWidget *, GdkEventButton *, gpointer);  /* "notify::label" signal handler for the label's close button widget*/
 static  void        close_clicked   (GtkButton *, gpointer);                    /* "clicked" signal handler for the label's close button widget*/
 
 /*** helper for actually creating (cloning) the tab label widget ***/
@@ -64,6 +68,10 @@ gtk_multiline_tab_get_type (void)
         };
 
         multiline_tab_type = g_type_register_static (GTK_TYPE_BOX, "GtkMultilineTab", &multiline_tab_info, 0);
+        if (!multiline_tab_type)
+        {
+            multiline_tab_type = g_type_from_name("GtkMultilineTab");
+        }
     }
 
   return multiline_tab_type;
@@ -201,6 +209,7 @@ gtk_multiline_tab_create_label (GtkWidget *label)
 {
 
     GList *children;
+    GtkWidget *tabLabelOld;
     GtkWidget *ebox;
     GtkWidget *hbox;
     GtkWidget *align;
@@ -218,17 +227,27 @@ gtk_multiline_tab_create_label (GtkWidget *label)
         if (GTK_IS_HBOX (hbox))
         {
             children = gtk_container_get_children (GTK_CONTAINER (hbox));
-            tab_label = children->data;
+            tabLabelOld = children->data;
             align = children->next->data;
             
-            if (GTK_IS_LABEL (tab_label))
-                tab_label = gtk_label_new (gtk_label_get_text (GTK_LABEL (tab_label)));
+            if (GTK_IS_LABEL (tabLabelOld))
+            {
+                tab_label = gtk_label_new (gtk_label_get_text (GTK_LABEL (tabLabelOld)));
+                gtk_label_set_use_markup(GTK_LABEL(tab_label), TRUE);
+                gtk_label_set_markup(GTK_LABEL(tab_label), gtk_label_get_text(GTK_LABEL(tabLabelOld)));
+                g_signal_connect (GTK_OBJECT(tabLabelOld), "style-set",
+                    GTK_SIGNAL_FUNC (label_markup_changed), (gpointer) tab_label);
+                gtk_widget_set_style(GTK_WIDGET(tab_label),
+                                     gtk_widget_get_style(GTK_WIDGET(tabLabelOld)));
+
+            }
             
             if (GTK_IS_ALIGNMENT (align))
             {
                 children = gtk_container_get_children (GTK_CONTAINER (align));
                 btn = children->data;
             }
+
         }
     }
 
@@ -261,6 +280,7 @@ gtk_multiline_tab_create_label (GtkWidget *label)
         GTK_SIGNAL_FUNC (close_press), (gpointer) btn);
     g_signal_connect (GTK_OBJECT (close_button), "clicked",
         GTK_SIGNAL_FUNC (close_clicked), (gpointer) btn);
+
 
     /* make the complex label widget visible */
     gtk_widget_show_all (ebox);
@@ -496,7 +516,10 @@ gtk_multiline_tab_expose (GtkWidget *widget, GdkEventExpose *event)
 
 
     /* call GtkBox method implementation */
+    if(parent_class)
+    {
     (* GTK_WIDGET_CLASS (parent_class)->expose_event) (widget, event);
+    }
 
     return FALSE;
 }
@@ -602,3 +625,9 @@ void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab,
 
 }
 
+gboolean label_markup_changed (GtkWidget * label, GdkEventButton *even, gpointer labelToSink)
+{
+    gtk_widget_set_style(GTK_WIDGET(labelToSink),
+                         gtk_widget_get_style(GTK_WIDGET(label)));
+    return FALSE;
+}

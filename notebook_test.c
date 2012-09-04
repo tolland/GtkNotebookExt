@@ -60,7 +60,7 @@ void plugin_init(GeanyData *data)
 
 void plugin_cleanup(void)
 {
-    GtkWidget *notebook;
+    /*GtkWidget *notebook;
     char bufferf[32];
     char bufferl[32];
     GtkWidget* frame;
@@ -69,17 +69,20 @@ void plugin_cleanup(void)
 
 
     notebook =  GTK_WIDGET(geany->main_widgets->notebook);
-    notebook_parent = gtk_widget_get_parent(GTK_WIDGET(multiline_tab_notebook));
+    if (notebook)
+    {
+        notebook_parent = gtk_widget_get_parent(GTK_WIDGET(multiline_tab_notebook));
 
-    g_object_ref(notebook);
-         gtk_container_remove(GTK_CONTAINER(multiline_tab_notebook), GTK_WIDGET(notebook));
-         gtk_container_remove(GTK_CONTAINER(notebook_parent), GTK_WIDGET(multiline_tab_notebook));
-         gtk_paned_add2(GTK_PANED(notebook_parent),GTK_WIDGET(notebook));
-         gtk_paned_pack2(GTK_PANED(notebook_parent),GTK_WIDGET(notebook),FALSE, FALSE);
-    g_object_unref(notebook);
+        g_object_ref(notebook);
+             gtk_container_remove(GTK_CONTAINER(multiline_tab_notebook), GTK_WIDGET(notebook));
+             gtk_container_remove(GTK_CONTAINER(notebook_parent), GTK_WIDGET(multiline_tab_notebook));
+             gtk_paned_add2(GTK_PANED(notebook_parent),GTK_WIDGET(notebook));
+             gtk_paned_pack2(GTK_PANED(notebook_parent),GTK_WIDGET(notebook),FALSE, FALSE);
+        g_object_unref(notebook);
 
-    gtk_widget_show_all(notebook_parent);
-    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), TRUE);
-    gtk_widget_destroy(multiline_tab_notebook);
+        gtk_widget_show_all(notebook_parent);
+        gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), TRUE);
+    }*/
+    gtk_widget_destroy(GTK_WIDGET(multiline_tab_notebook));
 }
 

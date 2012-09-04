@@ -235,8 +235,9 @@ gtk_multiline_tab_create_label (GtkWidget *label)
                 tab_label = gtk_label_new (gtk_label_get_text (GTK_LABEL (tabLabelOld)));
                 gtk_label_set_use_markup(GTK_LABEL(tab_label), TRUE);
                 gtk_label_set_markup(GTK_LABEL(tab_label), gtk_label_get_text(GTK_LABEL(tabLabelOld)));
-                g_signal_connect (GTK_OBJECT(tabLabelOld), "style-set",
+                gulong signal = g_signal_connect (GTK_OBJECT(tabLabelOld), "style-set",
                     GTK_SIGNAL_FUNC (label_markup_changed), (gpointer) tab_label);
+                signal = 0;
                 gtk_widget_set_style(GTK_WIDGET(tab_label),
                                      gtk_widget_get_style(GTK_WIDGET(tabLabelOld)));
 

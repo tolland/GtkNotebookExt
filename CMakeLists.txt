@@ -1,5 +1,4 @@
 project(GtkNoteBookExt)
-set (CMAKE_BUILD_TYPE Debug)
 cmake_minimum_required(VERSION 2.6)
 aux_source_directory(. SRC_LIST)
 add_library(${PROJECT_NAME} SHARED ${SRC_LIST})

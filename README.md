@@ -4,6 +4,11 @@ GtkMultilineTabNotebook is a gtk widget which is supposed to replace the standar
 
 The primary motivation is that I find it annoying to use any of the gtk based text editors such as gedit, geany, bluefish and their derivatives, because you either have to give up some content area real estate to have a file selector pane, or you have to scroll horizontally the tab display area.
 
+A gallery of some of the initial prototypes is available here;
+https://www.dropbox.com/sh/owe7z9pe5rq4jcs/X5t7ZKeFp0
+
+![prototype image](https://www.dropbox.com/sh/owe7z9pe5rq4jcs/V7fR_gL4xL/IMG_04092012_130424.png)
+
 
 This is an example of something like what I am trying to achieve;
 

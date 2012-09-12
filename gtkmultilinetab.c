@@ -16,6 +16,8 @@ typedef struct _TabMetrics
     GtkAllocation labelRect;
 } TabMetrics;
 
+
+
 static void     gtk_multiline_tab_class_init        (GtkMultilineTabClass *);
 static void     gtk_multiline_tab_init              (GtkMultilineTab *);
 static void     gtk_multiline_tab_destroy           (GtkObject *);
@@ -43,10 +45,13 @@ static  gboolean    label_markup_changed (GtkWidget *, GdkEventButton *, gpointe
 static  void        close_clicked   (GtkButton *, gpointer);                    /* "clicked" signal handler for the label's close button widget*/
 
 /*** helper for actually creating (cloning) the tab label widget ***/
-static  GtkWidget*  gtk_multiline_tab_create_label (GtkWidget *);
+static  GtkWidget*  gtk_multiline_tab_create_label (GtkMultilineTab* tab, GtkWidget *);
 
 static GtkVBoxClass *parent_class = NULL;
 static void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab, gint pos, GtkAllocation* layoutRect, TabMetrics * tabMetrics);
+static void disconnect_style_labels (gpointer key,
+                                     gpointer value,
+                                     gpointer user_data);
 GType
 gtk_multiline_tab_get_type (void)
 {
@@ -71,6 +76,7 @@ gtk_multiline_tab_get_type (void)
         if (!multiline_tab_type)
         {
             multiline_tab_type = g_type_from_name("GtkMultilineTab");
+            parent_class = gtk_type_class (gtk_box_get_type ());
         }
     }
 
@@ -122,6 +128,7 @@ gtk_multiline_tab_new (GtkNotebook *notebook)
     g_return_if_fail (GTK_IS_NOTEBOOK (notebook));
     
     multiline_tab = g_object_new (gtk_multiline_tab_get_type (), NULL);
+    //multiline_tab->labels = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     /* create children based on the labels of the notebook */
     npages = gtk_notebook_get_n_pages (notebook);
@@ -130,14 +137,14 @@ gtk_multiline_tab_new (GtkNotebook *notebook)
         child = gtk_notebook_get_nth_page (notebook, i);
         label = gtk_notebook_get_tab_label (notebook, child);
 
-        tab = gtk_multiline_tab_create_label (label);
+        tab = gtk_multiline_tab_create_label (multiline_tab, label);
         gtk_container_add (GTK_CONTAINER (multiline_tab), tab);
     }
 
     g_signal_connect (GTK_OBJECT (notebook), "page-added",
         GTK_SIGNAL_FUNC (gtk_multiline_tab_page_add),
         (gpointer) multiline_tab);
-    g_signal_connect (GTK_OBJECT (notebook), "page-removed",
+    multiline_tab->page_remove_id = g_signal_connect (GTK_OBJECT (notebook), "page-removed",
         GTK_SIGNAL_FUNC (gtk_multiline_tab_page_remove),
         (gpointer) multiline_tab);
     g_signal_connect (GTK_OBJECT (notebook), "change-current-page",
@@ -147,19 +154,30 @@ gtk_multiline_tab_new (GtkNotebook *notebook)
     /* save the essential notebook widget (pointer) */
     multiline_tab->notebook = notebook;
 
+
     return GTK_WIDGET (multiline_tab);
 }
 
 static void
 gtk_multiline_tab_destroy (GtkObject *object)
 {
-    GtkMultilineTab *multiline_tab;
+    GtkMultilineTab *multiline_tab = 0;
+
 
     g_return_if_fail (object != NULL);
     g_return_if_fail (GTK_IS_MULTILINE_TAB (object));
 
+
     multiline_tab = GTK_MULTILINE_TAB (object);
 
+    g_signal_handlers_disconnect_by_func(multiline_tab->notebook,
+                                         gtk_multiline_tab_page_remove, multiline_tab);
+    if(multiline_tab->labels)
+    {
+        g_hash_table_foreach(multiline_tab->labels, disconnect_style_labels, multiline_tab);
+        g_hash_table_destroy(multiline_tab->labels);
+        multiline_tab->labels = 0;
+    }
     if (GTK_OBJECT_CLASS (parent_class)->destroy) 
         (* GTK_OBJECT_CLASS (parent_class)->destroy) (object);
 }
@@ -205,7 +223,7 @@ gtk_multiline_tab_realize (GtkWidget *widget)
 }
 
 static  GtkWidget*  
-gtk_multiline_tab_create_label (GtkWidget *label)
+gtk_multiline_tab_create_label (GtkMultilineTab *tab, GtkWidget *label)
 {
 
     GList *children;
@@ -238,8 +256,15 @@ gtk_multiline_tab_create_label (GtkWidget *label)
                 gulong signal = g_signal_connect (GTK_OBJECT(tabLabelOld), "style-set",
                     GTK_SIGNAL_FUNC (label_markup_changed), (gpointer) tab_label);
                 signal = 0;
+
                 gtk_widget_set_style(GTK_WIDGET(tab_label),
                                      gtk_widget_get_style(GTK_WIDGET(tabLabelOld)));
+
+                if (!tab->labels)
+                {
+                    tab->labels = g_hash_table_new(g_direct_hash, g_direct_equal);
+                }
+                g_hash_table_insert(tab->labels, tabLabelOld, tab_label);
 
             }
             
@@ -298,7 +323,7 @@ gtk_multiline_tab_page_add (GtkNotebook *notebook, GtkWidget *child, guint page_
     label = gtk_notebook_get_tab_label (notebook, child);
 
     /* create the child based on the label of the notebook */
-    tab = gtk_multiline_tab_create_label (label);
+    tab = gtk_multiline_tab_create_label (GTK_MULTILINE_TAB(data), label);
 
     gtk_container_add (GTK_CONTAINER (data), tab);
     gtk_widget_queue_resize (GTK_WIDGET (data));
@@ -311,7 +336,7 @@ gtk_multiline_tab_page_remove (GtkNotebook *notebook, GtkWidget *child, guint pa
     GtkWidget *tab;
 
     /* check if GtkMultilineTab container still exists */
-    if (GTK_IS_CONTAINER (data))
+    if (GTK_IS_CONTAINER (data) && GTK_IS_WIDGET(notebook))
     {
         children = gtk_container_get_children (GTK_CONTAINER (data));
         tab = g_list_nth_data (children, page_num);
@@ -628,7 +653,21 @@ void gtk_multiline_tab_get_tab_size(GtkMultilineTab* tab,
 
 gboolean label_markup_changed (GtkWidget * label, GdkEventButton *even, gpointer labelToSink)
 {
-    gtk_widget_set_style(GTK_WIDGET(labelToSink),
+    if (GTK_IS_WIDGET(labelToSink))
+    {
+        gtk_widget_set_style(GTK_WIDGET(labelToSink),
                          gtk_widget_get_style(GTK_WIDGET(label)));
+    }
     return FALSE;
+}
+
+void disconnect_style_labels (gpointer key,
+                                     gpointer value,
+                                     gpointer user_data)
+{
+
+    guint count = g_signal_handlers_disconnect_by_func(key,
+                                         label_markup_changed,
+                                         value);
+    count = 0;
 }

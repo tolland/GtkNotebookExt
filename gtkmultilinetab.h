@@ -31,6 +31,13 @@ struct _GtMultilineTab
     
     /* dimension of the tab area */
     gint tab_height;
+
+    /*page remove signal id*/
+    guint page_remove_id;
+    /*Tab label widgets*/
+    GHashTable* labels;
+
+
 };
 
 struct _GtkMultilineTabClass
